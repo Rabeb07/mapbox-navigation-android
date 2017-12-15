@@ -331,8 +331,8 @@ public class NavigationView extends CoordinatorLayout implements LifecycleObserv
       options.navigationOptions().toBuilder().isFromNavigationUi(true).build());
     // Initialize the camera (listens to MapboxNavigation)
     initCamera();
-    // Everything is setup, set up the model observer
-    initViewModelObserver();
+    // Everything is setup, subscribe to the view models
+    subscribeViewModels();
     // Extract the route data which will begin navigation
     routeViewModel.extractLaunchData(options);
   }
@@ -408,9 +408,20 @@ public class NavigationView extends CoordinatorLayout implements LifecycleObserv
     camera = new NavigationCamera(this, map, navigationViewModel.getNavigation());
   }
 
-  private void initViewModelObserver() {
-    NavigationViewModelObserver observer = new NavigationViewModelObserver(navigationPresenter, navigationListener);
-    observer.subscribe(((LifecycleOwner) getContext()), locationViewModel, routeViewModel, navigationViewModel);
+  /**
+   * Subscribes the {@link InstructionView} and {@link SummaryBottomSheet} to the {@link NavigationViewModel}.
+   * <p>
+   * Then, creates an instance of {@link NavigationViewSubscriber}, which takes a presenter and listener.
+   * <p>
+   * The subscriber then subscribes to the view models, setting up the appropriate presenter / listener
+   * method calls based on the {@link android.arch.lifecycle.LiveData} updates.
+   */
+  private void subscribeViewModels() {
+    instructionView.subscribe(navigationViewModel);
+    summaryBottomSheet.subscribe(navigationViewModel);
+
+    NavigationViewSubscriber subscriber = new NavigationViewSubscriber(navigationPresenter, navigationListener);
+    subscriber.subscribe(((LifecycleOwner) getContext()), locationViewModel, routeViewModel, navigationViewModel);
   }
 
   /**
